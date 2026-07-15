@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+  <title>Daftar Akun - Tabungan Qurban Digital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="app.css">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#006b2c",
+            "primary-container": "#00873a",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#f7fff2",
+            "secondary-container": "#6cf8bb",
+            "on-secondary-container": "#00714d",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f2f4f6",
+            "surface-container": "#eceef0",
+            "on-surface": "#191c1e",
+            "on-surface-variant": "#3e4a3d",
+            "outline-variant": "#bdcaba",
+            "background": "#f7f9fb",
+            "on-background": "#191c1e"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col justify-center items-center px-6 py-12 relative overflow-x-hidden">
+  
+  <div class="absolute inset-0 islamic-pattern pointer-events-none -z-10"></div>
+  <div class="absolute top-10 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+
+  <!-- Card Wrapper -->
+  <div class="w-full max-w-md glass-panel rounded-3xl shadow-xl p-8 relative">
+    
+    <!-- Logo & Header -->
+    <div class="flex flex-col items-center mb-6">
+      <a href="/" class="flex items-center gap-2 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md">
+          <span class="material-symbols-outlined text-white text-[24px]">payments</span>
+        </div>
+        <span class="font-bold text-xl text-primary tracking-tight">Tabungan Qurban</span>
+      </a>
+      <h2 class="text-2xl font-bold text-on-surface">Daftar Akun Baru</h2>
+      <p class="text-xs text-on-surface-variant mt-1 text-center font-medium">Langkah awal merencanakan ibadah qurban Anda.</p>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="error-box" class="hidden mb-4 p-3 bg-red-100 border border-red-300 text-red-900 rounded-lg text-sm flex items-center gap-2">
+      <span class="material-symbols-outlined text-red-700 text-[18px]">error</span>
+      <span id="error-message">Email sudah terdaftar!</span>
+    </div>
+
+    <!-- Register Form -->
+    <form id="register-form" class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-semibold text-on-surface-variant mb-1">Nama Lengkap</label>
+        <input type="text" id="name" required placeholder="Ahmad Faisal" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all">
+      </div>
+
+      <div>
+        <label for="phone" class="block text-sm font-semibold text-on-surface-variant mb-1">Nomor Handphone (WhatsApp)</label>
+        <input type="tel" id="phone" required placeholder="0812XXXXXXXX" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all">
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-semibold text-on-surface-variant mb-1">Alamat Email</label>
+        <input type="email" id="email" required placeholder="nama@email.com" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all">
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-semibold text-on-surface-variant mb-1">Kata Sandi</label>
+        <input type="password" id="password" required placeholder="••••••••" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all">
+      </div>
+
+      <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl shadow-md hover:bg-primary/95 transition-all flex items-center justify-center gap-2">
+        Daftar Akun
+        <span class="material-symbols-outlined text-[18px]">person_add</span>
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-xs text-on-surface-variant">
+      Sudah memiliki akun? <a href="login.html" class="text-primary font-semibold hover:underline">Masuk Di Sini</a>
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById('register-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      const errorBox = document.getElementById('error-box');
+      const errorMessage = document.getElementById('error-message');
+
+      // Loading state on button
+      const registerBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = registerBtn.innerHTML;
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = 'Mendaftar...';
+
+      fetch('api.php?action=register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, phone, email, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = originalText;
+
+        if (data.status === 'success') {
+          // Auto login
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
+          window.location.href = 'dashboard.html';
+        } else {
+          errorBox.classList.remove('hidden');
+          errorMessage.textContent = data.message || 'Gagal mendaftarkan akun baru.';
+        }
+      })
+      .catch(err => {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = originalText;
+        console.error(err);
+        errorBox.classList.remove('hidden');
+        errorMessage.textContent = 'Gagal terhubung ke server. Pastikan Apache berjalan di Laragon.';
+      });
+    });
+  </script>
+</body>
+</html>

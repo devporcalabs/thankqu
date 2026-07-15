@@ -1,0 +1,10 @@
+# Block direct access to configuration files and SQL dumps
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files thankquu.sql>
+    Order allow,deny
+    Deny from all
+</Files>

@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Admin Panel - Tabungan Qurban Digital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="app.css">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#006b2c",
+            "primary-container": "#00873a",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#f7fff2",
+            "secondary-container": "#6cf8bb",
+            "on-secondary-container": "#00714d",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f2f4f6",
+            "surface-container": "#eceef0",
+            "surface-container-high": "#e6e8ea",
+            "surface-container-highest": "#e0e3e5",
+            "on-surface": "#191c1e",
+            "on-surface-variant": "#3e4a3d",
+            "outline-variant": "#bdcaba",
+            "background": "#f7f9fb",
+            "on-background": "#191c1e",
+            "tertiary": "#765700",
+            "tertiary-container": "#956e00",
+            "on-tertiary-container": "#fffbff",
+            "tertiary-fixed": "#ffdfa0",
+            "tertiary-fixed-dim": "#f6be39",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a"
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Security check - redirect if not admin
+    document.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('currentUser');
+      if (!userStr) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin') {
+        alert('Akses Ditolak! Hanya administrator yang dapat mengakses halaman ini.');
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md">
+
+  <!-- TOP BAR -->
+  <header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-white backdrop-blur-md shadow-sm border-b border-outline-variant/30">
+    <div class="flex items-center gap-2">
+      <span class="font-extrabold text-xl text-primary tracking-tight">Tabungan Qurban</span>
+      <span class="ml-4 px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase tracking-wider">Admin Panel</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 pl-4 border-l border-outline-variant/50">
+        <div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden flex items-center justify-center font-bold text-white text-sm">
+          SA
+        </div>
+        <div class="hidden md:block text-left">
+          <p class="text-xs font-bold leading-none">Ahmad Faisal</p>
+          <span class="text-[9px] text-on-surface-variant font-medium">Super Administrator</span>
+        </div>
+      </div>
+      <button onclick="logout()" class="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded-full active:scale-95 transition-all" title="Keluar">
+        <span class="material-symbols-outlined text-[20px]">logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-white border-r border-outline-variant/30 py-6 px-4 hidden md:flex flex-col justify-between z-40">
+    <nav class="flex flex-col gap-1.5" id="admin-nav-links">
+      <button onclick="switchAdminTab('overview')" id="nav-overview" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary-container text-on-secondary-container font-bold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        <span>Ringkasan Dashboard</span>
+      </button>
+      <button onclick="switchAdminTab('users')" id="nav-users" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">group</span>
+        <span>Kelola Pengguna</span>
+      </button>
+      <button onclick="switchAdminTab('transactions')" id="nav-transactions" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">payments</span>
+        <span>Persetujuan Setoran</span>
+      </button>
+      <button onclick="switchAdminTab('livestock')" id="nav-livestock" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        <span>Stok Hewan Qurban</span>
+      </button>
+      <button onclick="switchAdminTab('timelines')" id="nav-timelines" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">timeline</span>
+        <span>Progres Hewan Fisik</span>
+      </button>
+      <button onclick="switchAdminTab('locations')" id="nav-locations" class="admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">location_on</span>
+        <span>Kelola Lokasi Qurban</span>
+      </button>
+    </nav>
+    <div class="flex flex-col gap-1.5 border-t border-outline-variant/20 pt-4">
+      <button onclick="alert('Demo: Pengaturan Admin')" class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>Pengaturan</span>
+      </button>
+      <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs w-full text-left transition-all">
+        <span class="material-symbols-outlined text-[20px]">logout</span>
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="pt-24 pb-12 md:pl-[280px] md:pr-8 px-6 flex-grow">
+    
+    <!-- TAB 1: OVERVIEW -->
+    <div id="admin-overview" class="admin-view space-y-6">
+      <section>
+        <h1 class="text-xl font-bold text-on-surface">Overview Platform</h1>
+        <p class="text-xs text-on-surface-variant">Statistik terkini pengelolaan Tabungan Qurban Digital.</p>
+      </section>
+
+      <!-- Stats Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-on-surface-variant uppercase">Total Pengguna</span>
+            <div class="p-2 bg-emerald-50 text-primary rounded-lg"><span class="material-symbols-outlined text-[20px] block">group</span></div>
+          </div>
+          <h2 class="text-2xl font-extrabold text-on-surface mt-4" id="stat-total-users">2</h2>
+        </div>
+        
+        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-on-surface-variant uppercase">Dana Tabungan</span>
+            <div class="p-2 bg-emerald-50 text-primary rounded-lg"><span class="material-symbols-outlined text-[20px] block">savings</span></div>
+          </div>
+          <h2 class="text-2xl font-extrabold text-on-surface mt-4" id="stat-total-savings">IDR 0</h2>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-on-surface-variant uppercase">Stok Hewan</span>
+            <div class="p-2 bg-amber-50 text-amber-700 rounded-lg"><span class="material-symbols-outlined text-[20px] block">pets</span></div>
+          </div>
+          <h2 class="text-2xl font-extrabold text-on-surface mt-4" id="stat-total-animals">5</h2>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-on-surface-variant uppercase">Penyaluran</span>
+            <div class="p-2 bg-teal-50 text-teal-700 rounded-lg"><span class="material-symbols-outlined text-[20px] block">public</span></div>
+          </div>
+          <h2 class="text-2xl font-extrabold text-on-surface mt-4">92% Target</h2>
+        </div>
+      </div>
+
+      <!-- Growth Chart and Campaigns Health -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs">
+          <h3 class="font-bold text-sm text-on-surface mb-4">Grafik Pertumbuhan Tabungan (Bulanan)</h3>
+          <!-- Static representation bar chart -->
+          <div class="h-44 flex items-end justify-between gap-3 pt-6 border-b border-outline-variant/20">
+            <div class="flex-grow bg-emerald-100 rounded-t-lg h-[40%]"></div>
+            <div class="flex-grow bg-emerald-100 rounded-t-lg h-[50%]"></div>
+            <div class="flex-grow bg-emerald-100 rounded-t-lg h-[45%]"></div>
+            <div class="flex-grow bg-emerald-100 rounded-t-lg h-[65%]"></div>
+            <div class="flex-grow bg-primary rounded-t-lg h-[85%]"></div>
+          </div>
+          <div class="flex justify-between mt-2 text-[10px] text-on-surface-variant font-semibold">
+            <span>Februari</span><span>Maret</span><span>April</span><span>Mei</span><span>Juni (Aktif)</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-xs flex flex-col justify-between">
+          <h3 class="font-bold text-sm text-on-surface mb-2">Status Target Kampanye</h3>
+          <div class="relative w-36 h-36 mx-auto flex items-center justify-center my-4">
+            <svg class="w-full h-full transform -rotate-90">
+              <circle class="text-surface-container" cx="72" cy="72" fill="transparent" r="62" stroke="currentColor" stroke-width="8"></circle>
+              <circle class="text-primary" cx="72" cy="72" fill="transparent" r="62" stroke="currentColor" stroke-dasharray="390" stroke-dashoffset="100" stroke-width="8"></circle>
+            </svg>
+            <div class="absolute flex flex-col items-center">
+              <span class="text-2xl font-bold text-primary">75%</span>
+              <span class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Tercapai</span>
+            </div>
+          </div>
+          <p class="text-xs text-on-surface-variant text-center leading-relaxed">Pencapaian dari target hewan qurban terpesan untuk Idul Adha tahun ini.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: USER MANAGEMENT -->
+    <div id="admin-users" class="admin-view hidden space-y-6">
+      <section class="flex justify-between items-center">
+        <div>
+          <h1 class="text-xl font-bold text-on-surface">Manajemen Pengguna</h1>
+          <p class="text-xs text-on-surface-variant">Kelola daftar jamaah dan admin yang terdaftar pada sistem.</p>
+        </div>
+      </section>
+
+      <!-- Users Table -->
+      <div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-surface-container-low font-bold text-on-surface-variant uppercase border-b border-outline-variant/20">
+                <th class="p-4">Nama Lengkap</th>
+                <th class="p-4">Email</th>
+                <th class="p-4">WhatsApp</th>
+                <th class="p-4">Role</th>
+                <th class="p-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-table-body" class="divide-y divide-outline-variant/20">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: TRANSACTION APPROVALS -->
+    <div id="admin-transactions" class="admin-view hidden space-y-6">
+      <section>
+        <h1 class="text-xl font-bold text-on-surface">Persetujuan Transaksi Setoran</h1>
+        <p class="text-xs text-on-surface-variant">Ledger setoran manual atau pembayaran pending yang memerlukan verifikasi manual.</p>
+      </section>
+
+      <!-- Ledger Table -->
+      <div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-surface-container-low font-bold text-on-surface-variant uppercase border-b border-outline-variant/20">
+                <th class="p-4">Jamaah (Email)</th>
+                <th class="p-4">Paket Qurban</th>
+                <th class="p-4">Nominal</th>
+                <th class="p-4">Tanggal / Waktu</th>
+                <th class="p-4">Status</th>
+                <th class="p-4 text-center">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="admin-transactions-table-body" class="divide-y divide-outline-variant/20">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: LIVESTOCK MONITORING & CRUD -->
+    <div id="admin-livestock" class="admin-view hidden space-y-6">
+      <section class="flex justify-between items-center">
+        <div>
+          <h1 class="text-xl font-bold text-on-surface">Stok &amp; Monitoring Hewan</h1>
+          <p class="text-xs text-on-surface-variant">Atur inventory stok hewan qurban yang tersedia untuk dipesan jamaah.</p>
+        </div>
+        <button onclick="openAddLivestockModal()" class="bg-primary text-on-primary font-bold text-xs px-4 py-2 rounded-full hover:bg-primary/95 transition-all shadow-sm flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">add</span> Tambah Hewan
+        </button>
+      </section>
+
+      <!-- Livestock Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="admin-livestock-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 5: PHYSICAL TIMELINE MANAGER -->
+    <div id="admin-timelines" class="admin-view hidden space-y-6">
+      <section>
+        <h1 class="text-xl font-bold text-on-surface">Manajemen Timeline Fisik Qurban</h1>
+        <p class="text-xs text-on-surface-variant">Update progres fisik hewan qurban jamaah yang tabungannya telah lunas 100%.</p>
+      </section>
+
+      <!-- Timeline Manager Table -->
+      <div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-surface-container-low font-bold text-on-surface-variant uppercase border-b border-outline-variant/20">
+                <th class="p-4">Nama Jamaah</th>
+                <th class="p-4">Paket Hewan</th>
+                <th class="p-4">Metode Penyaluran</th>
+                <th class="p-4">Status Progres Saat Ini</th>
+                <th class="p-4 text-center">Ubah Status Progres</th>
+              </tr>
+            </thead>
+            <tbody id="admin-timelines-table-body" class="divide-y divide-outline-variant/20">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: LOKASI QURBAN CRUD -->
+    <div id="admin-locations" class="admin-view hidden space-y-6">
+      <section class="flex justify-between items-center">
+        <div>
+          <h1 class="text-xl font-bold text-on-surface">Manajemen Lokasi Qurban</h1>
+          <p class="text-xs text-on-surface-variant">Atur daftar wilayah distribusi penyaluran qurban beserta koordinat peta.</p>
+        </div>
+        <button onclick="openAddLocationModal()" class="bg-primary text-on-primary font-bold text-xs px-4 py-2 rounded-full hover:bg-primary/95 transition-all shadow-sm flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">add</span> Tambah Lokasi
+        </button>
+      </section>
+
+      <!-- Locations Table -->
+      <div class="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-surface-container-low font-bold text-on-surface-variant uppercase border-b border-outline-variant/20">
+                <th class="p-4">Nama Lokasi</th>
+                <th class="p-4">Wilayah / Provinsi</th>
+                <th class="p-4">Deskripsi</th>
+                <th class="p-4 text-center">Kapasitas</th>
+                <th class="p-4">Koordinat (Lat, Lng)</th>
+                <th class="p-4 text-center">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="admin-locations-table-body" class="divide-y divide-outline-variant/20">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BOTTOM NAV FOR MOBILE ADMIN VIEW -->
+  <nav class="fixed bottom-0 w-full z-45 flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur-md rounded-t-xl shadow-lg border-t border-outline-variant/30 md:hidden max-w-lg mx-auto left-0 right-0">
+    <button onclick="switchAdminTab('overview')" id="nav-mob-overview" class="flex flex-col items-center justify-center text-primary px-3 py-1 font-bold text-xs">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="text-[9px] mt-0.5">Overview</span>
+    </button>
+    <button onclick="switchAdminTab('transactions')" id="nav-mob-transactions" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1 text-xs">
+      <span class="material-symbols-outlined">payments</span>
+      <span class="text-[9px] mt-0.5">Approval</span>
+    </button>
+    <button onclick="switchAdminTab('locations')" id="nav-mob-locations" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1 text-xs">
+      <span class="material-symbols-outlined">location_on</span>
+      <span class="text-[9px] mt-0.5">Lokasi</span>
+    </button>
+    <button onclick="switchAdminTab('livestock')" id="nav-mob-livestock" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1 text-xs">
+      <span class="material-symbols-outlined">inventory_2</span>
+      <span class="text-[9px] mt-0.5">Stok</span>
+    </button>
+    <button onclick="switchAdminTab('timelines')" id="nav-mob-timelines" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1 text-xs">
+      <span class="material-symbols-outlined">timeline</span>
+      <span class="text-[9px] mt-0.5">Progres</span>
+    </button>
+  </nav>
+
+  <!-- ADD LIVESTOCK INVENTORY MODAL -->
+  <div id="add-livestock-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-xs">
+    <div class="w-full max-w-md bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-md text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-primary">add_box</span>Tambah Hewan Qurban</h3>
+        <button onclick="closeAddLivestockModal()" class="material-symbols-outlined text-on-surface-variant text-[24px]">close</button>
+      </div>
+
+      <form id="add-livestock-form" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nama Hewan / Paket</label>
+          <input type="text" id="add-animal-name" required placeholder="Contoh: Domba Garut Premium" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Kategori Hewan</label>
+          <select id="add-animal-category" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+            <option value="Domba">Domba</option>
+            <option value="Sapi Patungan">Sapi Patungan</option>
+            <option value="Sapi">Sapi Utuh</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Harga Paket (IDR)</label>
+            <input type="number" id="add-animal-price" required placeholder="Harga Rupiah" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Rata-rata Bobot</label>
+            <input type="text" id="add-animal-weight" required placeholder="Contoh: 30-35 kg" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Umur</label>
+            <input type="text" id="add-animal-age" required placeholder="Contoh: 1.5 Tahun" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Status Kesehatan</label>
+            <input type="text" id="add-animal-fit" value="Fit (Sehat)" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">URL Foto Hewan</label>
+          <input type="text" id="add-animal-image" value="https://lh3.googleusercontent.com/aida-public/AB6AXuD01xxU7e937WQxR4nYZpcjwo3jrOsDL0hZredv170fV4494Sf4nk9mK9lA9C5la2mN7465F5kGeB0lfun46gDzvLGzgc3r_YJEc-TmkqzjKsC1VBRyTzO-ox9KmtD3xD8cU3bhz-mebaqpf7gnkhDuTirVNvOQnawacxh1Ibe7Xn3txcLOnO6fNSn8pIlhEStA1M4DefT4WQxQ_G_IBqrPm0z8RLaQx2cb2bSc-mvnDyF56DNfk0P86tyTWqwOjFRWjeZ88x6bGAoE" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none text-slate-400">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Deskripsi Singkat</label>
+          <textarea id="add-animal-desc" required rows="2" placeholder="Deskripsi mengenai peternakan atau benefit hewan..." class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:bg-primary/95 transition-all text-xs flex items-center justify-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-[16px]">save</span> Simpan Hewan Baru
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT LIVESTOCK INVENTORY MODAL -->
+  <div id="edit-livestock-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-xs">
+    <div class="w-full max-w-md bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-md text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-primary">edit_square</span>Edit Hewan Qurban</h3>
+        <button onclick="closeEditLivestockModal()" class="material-symbols-outlined text-on-surface-variant text-[24px]">close</button>
+      </div>
+
+      <form id="edit-livestock-form" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <input type="hidden" id="edit-animal-id">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nama Hewan / Paket</label>
+          <input type="text" id="edit-animal-name" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Kategori Hewan</label>
+          <select id="edit-animal-category" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+            <option value="Domba">Domba</option>
+            <option value="Sapi Patungan">Sapi Patungan</option>
+            <option value="Sapi">Sapi Utuh</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Harga Paket (IDR)</label>
+            <input type="number" id="edit-animal-price" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Rata-rata Bobot</label>
+            <input type="text" id="edit-animal-weight" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Umur</label>
+            <input type="text" id="edit-animal-age" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Status Kesehatan</label>
+            <input type="text" id="edit-animal-fit" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">URL Foto Hewan</label>
+          <input type="text" id="edit-animal-image" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none text-slate-400">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Deskripsi Singkat</label>
+          <textarea id="edit-animal-desc" required rows="2" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:bg-primary/95 transition-all text-xs flex items-center justify-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-[16px]">save</span> Perbarui Data Hewan
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD LOCATION MODAL -->
+  <div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-xs">
+    <div class="w-full max-w-md bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-md text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-primary">add_location_alt</span>Tambah Lokasi Penyaluran</h3>
+        <button onclick="closeAddLocationModal()" class="material-symbols-outlined text-on-surface-variant text-[24px]">close</button>
+      </div>
+
+      <form id="add-location-form" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nama Lokasi / Lembaga</label>
+          <input type="text" id="add-loc-name" required placeholder="Contoh: Palestina (Lembaga Penyalur)" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Wilayah / Provinsi</label>
+          <input type="text" id="add-loc-region" required placeholder="Contoh: Palestina atau NTT" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Kapasitas</label>
+            <input type="number" id="add-loc-capacity" required placeholder="Jumlah" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Latitude</label>
+            <input type="number" step="any" id="add-loc-latitude" value="0.000000" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Longitude</label>
+            <input type="number" step="any" id="add-loc-longitude" value="0.000000" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Deskripsi Wilayah / Dampak</label>
+          <textarea id="add-loc-desc" required rows="3" placeholder="Jelaskan kebutuhan, kondisi kemanusiaan atau penerima qurban di daerah ini..." class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:bg-primary/95 transition-all text-xs flex items-center justify-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-[16px]">save</span> Simpan Lokasi Baru
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT LOCATION MODAL -->
+  <div id="edit-location-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-xs">
+    <div class="w-full max-w-md bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-md text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-primary">edit_location_alt</span>Edit Lokasi Penyaluran</h3>
+        <button onclick="closeEditLocationModal()" class="material-symbols-outlined text-on-surface-variant text-[24px]">close</button>
+      </div>
+
+      <form id="edit-location-form" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <input type="hidden" id="edit-loc-id">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nama Lokasi / Lembaga</label>
+          <input type="text" id="edit-loc-name" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Wilayah / Provinsi</label>
+          <input type="text" id="edit-loc-region" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Kapasitas</label>
+            <input type="number" id="edit-loc-capacity" required class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Latitude</label>
+            <input type="number" step="any" id="edit-loc-latitude" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Longitude</label>
+            <input type="number" step="any" id="edit-loc-longitude" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Deskripsi Wilayah / Dampak</label>
+          <textarea id="edit-loc-desc" required rows="3" class="w-full bg-surface-container-low border border-outline-variant rounded-xl text-xs py-2 px-3 outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:bg-primary/95 transition-all text-xs flex items-center justify-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-[16px]">save</span> Perbarui Lokasi
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOGOUT CONFIRMATION MODAL -->
+  <div id="logout-confirm-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6 backdrop-blur-xs">
+    <div class="w-full max-w-sm bg-white rounded-2xl p-6 flex flex-col gap-4 shadow-xl border border-outline-variant/30 text-center">
+      <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2">
+        <span class="material-symbols-outlined text-3xl">logout</span>
+      </div>
+      <h3 class="font-bold text-lg text-on-surface">Konfirmasi Keluar</h3>
+      <p class="text-xs text-on-surface-variant leading-relaxed">Apakah Anda yakin ingin keluar dari akun Anda?</p>
+      <div class="grid grid-cols-2 gap-3 mt-2">
+        <button onclick="closeLogoutModal()" class="bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold py-3 rounded-xl transition-all text-xs">Batal</button>
+        <button onclick="confirmLogoutSubmit()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all text-xs shadow-sm shadow-red-200">Ya, Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Local Database references
+    let usersList = [];
+    let activeSavings = [];
+    let livestockList = [];
+    let locationsList = [];
+
+    // Default package list source
+    const defaultLivestock = [
+      { id: "Domba-A", category: "Domba", name: "Domba A", price: 2300000, desc: "Domba sehat dengan kualitas prima untuk ibadah qurban berkah.", weight: "23-26 kg", age: "1.2 Tahun", fit: "Fit (Sehat)", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD01xxU7e937WQxR4nYZpcjwo3jrOsDL0hZredv170fV4494Sf4nk9mK9lA9C5la2mN7465F5kGeB0lfun46gDzvLGzgc3r_YJEc-TmkqzjKsC1VBRyTzO-ox9KmtD3xD8cU3bhz-mebaqpf7gnkhDuTirVNvOQnawacxh1Ibe7Xn3txcLOnO6fNSn8pIlhEStA1M4DefT4WQxQ_G_IBqrPm0z8RLaQx2cb2bSc-mvnDyF56DNfk0P86tyTWqwOjFRWjeZ88x6bGAoE" },
+      { id: "Domba-B", category: "Domba", name: "Domba B", price: 2700000, desc: "Domba gemuk dengan nutrisi terjamin, cocok untuk keluarga.", weight: "28-32 kg", age: "1.5 Tahun", fit: "Fit (Sehat)", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAcSKoiNDvNcj7WRqA30TTDZ62jeDCtrrc51auT7bX9yL34Fh_OCm6WOVaYVJwyqMXDV_wBixrCvTKn8X9XtHY0n9zGfn4B-v-Hyg26rri-M52xuKRm7ZzVLBebahZV7Uvgyb4CFVDvS8jjUXvuS5k7CluJ_125V05rr_yWRX9ay0NoAzcs4vHiIyEPl_Qnnng7GtuIYZK6dYKw9iqNqFSlYvxrLktZEVrNW1nByzo1tcSZ1--Go092HFiwDmwKYQxtS9qoq6huwPwa" },
+      { id: "Domba-C", category: "Domba", name: "Domba C (Super)", price: 3500000, desc: "Domba ukuran premium besar, daging melimpah, dirawat ahli.", weight: "35-40 kg", age: "1.8 Tahun", fit: "Fit (Sehat)", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBfBJ7wBa0ZumJYkwAP_2vKXYRW3p5izja6UrthrDxtCNP4-CmtWd3uT3Gi_H9OvaA6XGurQfR79O60dV7CZUi7RlhH7nACyjF5sDR37Pidun5WK_uPRonkN8wnAN_ynF09_A5OzZh7P0zefP5zlKu-vnxCqxv7ZY_FswmQu3Nk4l_U1vHZipy3imT74BJtfNJPSUr-EnoZJPwg6jfY8-017CgF8h3PTu4CfaJ29tTjXkiifDDMIZh-2g07sITg0Dgft4d9muCnm4Ed" },
+      { id: "Sapi-Patungan", category: "Sapi Patungan", name: "Sapi Patungan (1/7)", price: 3500000, desc: "Patungan qurban sapi 1/7 kelompok. Pembagian kelompok diatur sistem otomatis syariah.", weight: "300-350 kg (total Sapi)", age: "2.5 Tahun", fit: "Fit (Sehat)", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD_kA8C62RZ59pO-FPosUtY3y231uFZ-ZJ43nnjSnDRRcKH0Tdpt5W7chA1fcoIQVgP6q15dMZXWfSQjBOlxIUA-iYyb9iZGgLeAimE0OTUnANRw9O4UCgnbF4nRntL6WDlBQr80G6z3nH9j5x7zKpp28OouByRiLM5RXOjOQMx_pSoXZ4bqgDS4ryb2_LkFNZU27w6BFq5-e620LfwbVOUJxlt8RHkNBZpLvC7PADfsrCipWyajbmXmQfBwAZSehJKDT2AP2L_3TBM" },
+      { id: "Sapi-Utuh", category: "Sapi", name: "Sapi 1 Ekor", price: 24000000, desc: "Sapi Limousin utuh premium untuk qurban atas nama keluarga besar Anda (7 orang).", weight: "420-480 kg", age: "2.8 Tahun", fit: "Fit (Sehat)", image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDnGNcEb4t2Prwhfv2FLXutI-qb7nCCXFZkq-OXYSGIShiDll227LAvZfTcxENB1GUk1uyWzgklQ9Tfzcvk_lQYNR5TmSPIzw3lojNWIlq8qWMRG3qQqseg3JpIanIgRnZlDXPP5YZn-gy4eUkxtXqIMcNv1slowvpdQSNN4qKmGBKM92KX3HJ02YuoMGiDV7YuMqKJ3JYrzLRHi-opXIkTHO7I-_FhPYamarZw8nVwSHDDswfeq-Z1HLiioW5qFSOf41CIaFoev1ZO" }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLocalDatabase();
+      switchAdminTab('overview');
+    });
+
+    let transactionsList = [];
+    let timelinesList = [];
+
+    function loadLocalDatabase() {
+      fetch('api.php?action=get_admin_data')
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          usersList = data.users || [];
+          transactionsList = data.transactions || [];
+          timelinesList = (data.timelines || []).map(s => {
+            return {
+              id: s.id,
+              email: s.email,
+              userName: s.userName,
+              packageName: s.packageName,
+              penyaluran: {
+                method: s.penyaluran_method,
+                address: s.penyaluran_address,
+                status: s.penyaluran_status
+              }
+            };
+          });
+          livestockList = data.livestock || [];
+
+          // Update overview figures
+          document.getElementById('stat-total-users').textContent = data.stats.total_users;
+          document.getElementById('stat-total-savings').textContent = formatCurrency(parseFloat(data.stats.total_savings));
+          document.getElementById('stat-total-animals').textContent = data.stats.total_livestock;
+
+          locationsList = data.locations || [];
+
+          // Populate tables and CRUDs
+          renderUsersTable();
+          renderTransactionsTable();
+          renderTimelinesTable();
+          renderLivestockCRUD();
+          renderLocationsTable();
+        } else {
+          console.error("Gagal mengambil data admin:", data.message);
+        }
+      })
+      .catch(err => {
+        console.error("Kesalahan koneksi data admin:", err);
+      });
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('admin-users-table-body');
+      tbody.innerHTML = '';
+
+      if (usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-on-surface-variant">Tidak ada pengguna terdaftar.</td></tr>';
+        return;
+      }
+
+      usersList.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container-low transition-colors";
+        
+        tr.innerHTML = `
+          <td class="p-4 font-semibold">${user.name}</td>
+          <td class="p-4 text-on-surface-variant">${user.email}</td>
+          <td class="p-4 text-on-surface-variant">${user.phone}</td>
+          <td class="p-4">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${user.role === 'admin' ? 'bg-secondary-container text-on-secondary-container' : 'bg-emerald-50 text-primary'} uppercase">
+              ${user.role}
+            </span>
+          </td>
+          <td class="p-4 text-center">
+            <button onclick="toggleUserRole('${user.email}')" class="text-xs text-primary font-bold hover:underline mx-1">Ubah Role</button>
+            ${user.role !== 'admin' ? `<button onclick="deleteUser('${user.email}')" class="text-xs text-red-600 font-bold hover:underline mx-1">Hapus</button>` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toggleUserRole(email) {
+      if (confirm(`Apakah Anda yakin ingin mengubah role pengguna dengan email ${email}?`)) {
+        fetch('api.php?action=toggle_user_role', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert(data.message);
+            loadLocalDatabase();
+          } else {
+            alert("Gagal mengubah role: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Gagal menghubungi server.");
+        });
+      }
+    }
+
+    function deleteUser(email) {
+      if (confirm(`Apakah Anda yakin ingin menghapus pengguna dengan email ${email}? Tindakan ini permanen.`)) {
+        fetch('api.php?action=delete_user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert(data.message);
+            loadLocalDatabase();
+          } else {
+            alert("Gagal menghapus user: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Gagal menghubungi server.");
+        });
+      }
+    }
+
+    function renderTransactionsTable() {
+      const tbody = document.getElementById('admin-transactions-table-body');
+      tbody.innerHTML = '';
+
+      if (transactionsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-on-surface-variant">Belum ada transaksi setoran.</td></tr>';
+        return;
+      }
+
+      transactionsList.forEach(tx => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container-low transition-colors";
+        
+        const isPending = tx.status === 'Pending';
+        
+        tr.innerHTML = `
+          <td class="p-4 font-semibold">${tx.userName}<br><span class="text-[10px] text-on-surface-variant font-normal">${tx.email}</span></td>
+          <td class="p-4 text-on-surface-variant">${tx.packageName}</td>
+          <td class="p-4 font-bold text-primary">${formatCurrency(parseFloat(tx.amount))}</td>
+          <td class="p-4 text-on-surface-variant">${tx.date} • ${tx.time}</td>
+          <td class="p-4">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${tx.status === 'Success' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">
+              ${tx.status}
+            </span>
+          </td>
+          <td class="p-4 text-center">
+            ${isPending ? `<button onclick="approveTransaction(${tx.txId})" class="bg-primary text-on-primary font-bold px-3 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all">Setujui</button>` : '<span class="text-[10px] text-on-surface-variant">Lunas</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function approveTransaction(txId) {
+      if (confirm("Apakah Anda yakin ingin menyetujui transaksi ini secara manual?")) {
+        fetch('api.php?action=approve_transaction', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ txId })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert("Transaksi berhasil disetujui!");
+            loadLocalDatabase();
+          } else {
+            alert("Gagal menyetujui transaksi: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Gagal terhubung ke server.");
+        });
+      }
+    }
+
+    function renderTimelinesTable() {
+      const tbody = document.getElementById('admin-timelines-table-body');
+      tbody.innerHTML = '';
+
+      if (timelinesList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-on-surface-variant">Belum ada penyaluran qurban yang dikonfirmasi oleh jamaah.</td></tr>';
+        return;
+      }
+
+      timelinesList.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container-low transition-colors";
+        
+        tr.innerHTML = `
+          <td class="p-4 font-semibold">${s.userName}<br><span class="text-[10px] text-on-surface-variant font-normal">${s.email}</span></td>
+          <td class="p-4 text-on-surface-variant font-medium">${s.packageName}</td>
+          <td class="p-4 font-semibold">${s.penyaluran.method}<br><span class="text-[9px] text-on-surface-variant font-normal">${s.penyaluran.address}</span></td>
+          <td class="p-4 font-bold text-primary">${s.penyaluran.status}</td>
+          <td class="p-4 text-center">
+            <select onchange="updateQurbanProgress('${s.id}', this.value)" class="bg-surface-container rounded-lg border-none text-xs font-semibold py-1.5 px-3 focus:ring-primary outline-none">
+              <option value="Penyaluran Dipilih" ${s.penyaluran.status === 'Penyaluran Dipilih' ? 'selected' : ''}>1. Penyaluran Dipilih</option>
+              <option value="Hewan Dipilih" ${s.penyaluran.status === 'Hewan Dipilih' ? 'selected' : ''}>2. Hewan Dipilih</option>
+              <option value="Pemeriksaan Kesehatan" ${s.penyaluran.status === 'Pemeriksaan Kesehatan' ? 'selected' : ''}>3. Pemeriksaan Kesehatan</option>
+              <option value="Pengiriman Lokasi" ${s.penyaluran.status === 'Pengiriman Lokasi' ? 'selected' : ''}>4. Pengiriman Lokasi</option>
+              <option value="Penyembelihan" ${s.penyaluran.status === 'Penyembelihan' ? 'selected' : ''}>5. Penyembelihan</option>
+              <option value="Distribusi" ${s.penyaluran.status === 'Distribusi' ? 'selected' : ''}>6. Distribusi Daging</option>
+              <option value="Laporan Selesai" ${s.penyaluran.status === 'Laporan Selesai' ? 'selected' : ''}>7. Laporan Selesai / Sertifikat Tersedia</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateQurbanProgress(savingsId, newStatus) {
+      fetch('api.php?action=update_timeline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          savings_id: savingsId,
+          status: newStatus
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert(`Status progres qurban berhasil diubah menjadi: ${newStatus}`);
+          loadLocalDatabase();
+        } else {
+          alert("Gagal mengubah status: " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal menghubungi server.");
+      });
+    }
+
+    function renderLivestockCRUD() {
+      const list = document.getElementById('admin-livestock-list');
+      list.innerHTML = '';
+
+      document.getElementById('stat-total-animals').textContent = livestockList.length;
+
+      livestockList.forEach(a => {
+        const card = document.createElement('div');
+        card.className = "bg-white border border-outline-variant/30 rounded-xl overflow-hidden shadow-xs flex flex-col group";
+        
+        card.innerHTML = `
+          <div class="h-36 relative overflow-hidden">
+            <img class="w-full h-full object-cover" src="${a.image}" alt="${a.name}">
+            <span class="absolute top-2 right-2 bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full text-[9px] font-bold">${a.category}</span>
+          </div>
+          <div class="p-4 flex flex-col gap-2">
+            <h5 class="font-bold text-sm text-on-surface">${a.name}</h5>
+            <p class="text-[10px] text-on-surface-variant font-medium mb-1">Rata-rata: ${a.weight} • Umur: ${a.age}</p>
+            <div class="flex justify-between items-center border-t border-outline-variant/20 pt-2">
+              <span class="font-bold text-sm text-primary">${formatCurrency(parseFloat(a.price))}</span>
+              <div class="flex gap-2">
+                <button onclick="openEditLivestockModal('${a.id}')" class="text-xs font-bold text-primary hover:underline">Edit</button>
+                <button onclick="deleteLivestock('${a.id}')" class="text-xs font-bold text-red-600 hover:underline">Hapus</button>
+              </div>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function openAddLivestockModal() {
+      document.getElementById('add-livestock-modal').classList.remove('hidden');
+    }
+
+    function closeAddLivestockModal() {
+      document.getElementById('add-livestock-modal').classList.add('hidden');
+    }
+
+    document.getElementById('add-livestock-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('add-animal-name').value.trim();
+      const category = document.getElementById('add-animal-category').value;
+      const price = Number(document.getElementById('add-animal-price').value) || 0;
+      const weight = document.getElementById('add-animal-weight').value.trim();
+      const age = document.getElementById('add-animal-age').value.trim();
+      const fit = document.getElementById('add-animal-fit').value.trim();
+      const image = document.getElementById('add-animal-image').value.trim();
+      const desc = document.getElementById('add-animal-desc').value.trim();
+
+      const newId = category.toLowerCase().replace(' ', '-') + '-' + Date.now();
+      
+      const newAnimal = {
+        id: newId,
+        category: category,
+        name: name,
+        price: price,
+        weight: weight,
+        age: age,
+        fit: fit,
+        image: image,
+        desc: desc
+      };
+
+      fetch('api.php?action=add_livestock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newAnimal)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          closeAddLivestockModal();
+          document.getElementById('add-livestock-form').reset();
+          alert(`Stok hewan qurban ${name} berhasil ditambahkan!`);
+          loadLocalDatabase();
+        } else {
+          alert("Gagal menambahkan hewan: " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal menghubungi server.");
+      });
+    });
+
+    function deleteLivestock(id) {
+      if (confirm("Apakah Anda yakin ingin menghapus hewan ini dari daftar stok?")) {
+        fetch('api.php?action=delete_livestock', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert("Stok hewan berhasil dihapus.");
+            loadLocalDatabase();
+          } else {
+            alert("Gagal menghapus stok: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Gagal menghubungi server.");
+        });
+      }
+    }
+
+    // === LIVESTOCK EDIT ===
+    function openEditLivestockModal(id) {
+      const a = livestockList.find(item => item.id === id);
+      if (!a) return;
+
+      document.getElementById('edit-animal-id').value = a.id;
+      document.getElementById('edit-animal-name').value = a.name;
+      document.getElementById('edit-animal-category').value = a.category;
+      document.getElementById('edit-animal-price').value = a.price;
+      document.getElementById('edit-animal-weight').value = a.weight;
+      document.getElementById('edit-animal-age').value = a.age;
+      document.getElementById('edit-animal-fit').value = a.fit;
+      document.getElementById('edit-animal-image').value = a.image;
+      document.getElementById('edit-animal-desc').value = a.desc;
+
+      document.getElementById('edit-livestock-modal').classList.remove('hidden');
+    }
+
+    function closeEditLivestockModal() {
+      document.getElementById('edit-livestock-modal').classList.add('hidden');
+    }
+
+    document.getElementById('edit-livestock-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('edit-animal-id').value;
+      const name = document.getElementById('edit-animal-name').value.trim();
+      const category = document.getElementById('edit-animal-category').value;
+      const price = Number(document.getElementById('edit-animal-price').value) || 0;
+      const weight = document.getElementById('edit-animal-weight').value.trim();
+      const age = document.getElementById('edit-animal-age').value.trim();
+      const fit = document.getElementById('edit-animal-fit').value.trim();
+      const image = document.getElementById('edit-animal-image').value.trim();
+      const desc = document.getElementById('edit-animal-desc').value.trim();
+
+      const updatedAnimal = { id, name, category, price, weight, age, fit, image, desc };
+
+      fetch('api.php?action=edit_livestock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedAnimal)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          closeEditLivestockModal();
+          alert(`Stok hewan qurban ${name} berhasil diperbarui!`);
+          loadLocalDatabase();
+        } else {
+          alert("Gagal memperbarui hewan: " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal menghubungi server.");
+      });
+    });
+
+    // === LOCATIONS CRUD ===
+    function renderLocationsTable() {
+      const tbody = document.getElementById('admin-locations-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (locationsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-on-surface-variant">Tidak ada lokasi terdaftar.</td></tr>';
+        return;
+      }
+
+      locationsList.forEach(loc => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container-low transition-colors";
+
+        tr.innerHTML = `
+          <td class="p-4 font-semibold">${loc.name}</td>
+          <td class="p-4 text-on-surface-variant">${loc.region}</td>
+          <td class="p-4 text-on-surface-variant max-w-xs truncate" title="${loc.description}">${loc.description}</td>
+          <td class="p-4 text-center font-bold text-primary">${loc.capacity}</td>
+          <td class="p-4 text-on-surface-variant font-mono text-[10px]">${parseFloat(loc.latitude).toFixed(6)}, ${parseFloat(loc.longitude).toFixed(6)}</td>
+          <td class="p-4 text-center">
+            <button onclick="openEditLocationModal(${loc.id})" class="text-xs text-primary font-bold hover:underline mx-1">Edit</button>
+            <button onclick="deleteLocation(${loc.id})" class="text-xs text-red-600 font-bold hover:underline mx-1">Hapus</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAddLocationModal() {
+      document.getElementById('add-location-modal').classList.remove('hidden');
+    }
+
+    function closeAddLocationModal() {
+      document.getElementById('add-location-modal').classList.add('hidden');
+    }
+
+    document.getElementById('add-location-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('add-loc-name').value.trim();
+      const region = document.getElementById('add-loc-region').value.trim();
+      const capacity = Number(document.getElementById('add-loc-capacity').value) || 0;
+      const latitude = Number(document.getElementById('add-loc-latitude').value) || 0;
+      const longitude = Number(document.getElementById('add-loc-longitude').value) || 0;
+      const description = document.getElementById('add-loc-desc').value.trim();
+
+      fetch('api.php?action=add_location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, region, capacity, latitude, longitude, description })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          closeAddLocationModal();
+          document.getElementById('add-location-form').reset();
+          alert(`Lokasi penyaluran ${name} berhasil ditambahkan!`);
+          loadLocalDatabase();
+        } else {
+          alert("Gagal menambahkan lokasi: " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal menghubungi server.");
+      });
+    });
+
+    function openEditLocationModal(id) {
+      const loc = locationsList.find(item => item.id == id);
+      if (!loc) return;
+
+      document.getElementById('edit-loc-id').value = loc.id;
+      document.getElementById('edit-loc-name').value = loc.name;
+      document.getElementById('edit-loc-region').value = loc.region;
+      document.getElementById('edit-loc-capacity').value = loc.capacity;
+      document.getElementById('edit-loc-latitude').value = loc.latitude;
+      document.getElementById('edit-loc-longitude').value = loc.longitude;
+      document.getElementById('edit-loc-desc').value = loc.description;
+
+      document.getElementById('edit-location-modal').classList.remove('hidden');
+    }
+
+    function closeEditLocationModal() {
+      document.getElementById('edit-location-modal').classList.add('hidden');
+    }
+
+    document.getElementById('edit-location-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('edit-loc-id').value;
+      const name = document.getElementById('edit-loc-name').value.trim();
+      const region = document.getElementById('edit-loc-region').value.trim();
+      const capacity = Number(document.getElementById('edit-loc-capacity').value) || 0;
+      const latitude = Number(document.getElementById('edit-loc-latitude').value) || 0;
+      const longitude = Number(document.getElementById('edit-loc-longitude').value) || 0;
+      const description = document.getElementById('edit-loc-desc').value.trim();
+
+      fetch('api.php?action=edit_location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id, name, region, capacity, latitude, longitude, description })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          closeEditLocationModal();
+          alert(`Lokasi penyaluran ${name} berhasil diperbarui!`);
+          loadLocalDatabase();
+        } else {
+          alert("Gagal memperbarui lokasi: " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal menghubungi server.");
+      });
+    });
+
+    function deleteLocation(id) {
+      if (confirm("Apakah Anda yakin ingin menghapus lokasi ini?")) {
+        fetch('api.php?action=delete_location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert("Lokasi penyaluran berhasil dihapus.");
+            loadLocalDatabase();
+          } else {
+            alert("Gagal menghapus lokasi: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Gagal menghubungi server.");
+        });
+      }
+    }
+
+    // Tab Controller for panel
+    function switchAdminTab(tabId) {
+      document.querySelectorAll('.admin-view').forEach(v => {
+        v.classList.add('hidden');
+      });
+      document.getElementById('admin-' + tabId).classList.remove('hidden');
+
+      // Update sidebar nav button highlights
+      document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        btn.className = "admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-low font-semibold text-xs w-full text-left transition-all";
+      });
+      
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "admin-tab-btn flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary-container text-on-secondary-container font-bold text-xs w-full text-left transition-all";
+      }
+
+      // Sync mobile bottom nav buttons as well
+      const activeMobBtn = document.getElementById('nav-mob-' + tabId);
+      if (activeMobBtn) {
+        // Clear all mobile navigation buttons first
+        document.querySelectorAll('nav button').forEach(b => {
+          b.className = "flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1 text-xs";
+        });
+        activeMobBtn.className = "flex flex-col items-center justify-center text-primary px-3 py-1 font-bold text-xs";
+      }
+    }
+
+    // Helper functions
+    function formatCurrency(num) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    }
+
+    function logout() {
+      document.getElementById('logout-confirm-modal').classList.remove('hidden');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logout-confirm-modal').classList.add('hidden');
+    }
+
+    // Process actual logout redirection
+    function confirmLogoutSubmit() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

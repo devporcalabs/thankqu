@@ -1,0 +1,135 @@
+/* Islamic Fintech Design System - Core CSS stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+:root {
+  --primary: #006b2c;
+  --primary-container: #00873a;
+  --on-primary: #ffffff;
+  --on-primary-container: #f7fff2;
+  --primary-fixed-dim: #62df7d;
+  
+  --secondary: #006c49;
+  --secondary-container: #6cf8bb;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #00714d;
+  
+  --tertiary: #765700;
+  --tertiary-container: #956e00;
+  --on-tertiary: #ffffff;
+  --on-tertiary-container: #fffbff;
+  --tertiary-fixed: #ffdfa0;
+  --tertiary-fixed-dim: #f6be39;
+  
+  --surface: #f7f9fb;
+  --surface-dim: #d8dadc;
+  --surface-bright: #f7f9fb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f4f6;
+  --surface-container: #eceef0;
+  --surface-container-high: #e6e8ea;
+  --surface-container-highest: #e0e3e5;
+  --on-surface: #191c1e;
+  --on-surface-variant: #3e4a3d;
+  --outline: #6e7b6c;
+  --outline-variant: #bdcaba;
+  
+  --background: #f7f9fb;
+  --on-background: #191c1e;
+  
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error: #ffffff;
+  --on-error-container: #93000a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--on-background);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Glassmorphism Accents */
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+/* Geometric Islamic Pattern Watermark */
+.islamic-pattern {
+  background-image: url("https://www.transparenttextures.com/patterns/pinstriped-suit.png");
+  opacity: 0.03;
+}
+
+/* Custom Hide Scrollbar */
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Interactive Timelines */
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--surface-container-highest);
+  z-index: 0;
+}
+
+.timeline-track-active::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 0;
+  width: 2px;
+  background: var(--primary);
+  z-index: 1;
+}
+
+/* Animations */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite ease-in-out;
+}
+
+/* Custom printing styles for certificates */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #certificate-print-area, #certificate-print-area * {
+    visibility: visible;
+  }
+  #certificate-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+}
