@@ -732,14 +732,21 @@ class AdminController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $path = $file->store('livestock', 'public');
+            
+            $disk = config('filesystems.default');
+            // Fallback to public locally if default is local (private)
+            if ($disk === 'local') {
+                $disk = 'public';
+            }
+            
+            $path = $file->store('livestock', $disk);
             if ($path === false) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Gagal mengunggah berkas ke penyimpanan lokal.',
+                    'message' => 'Gagal mengunggah berkas ke penyimpanan.',
                 ], 500);
             }
-            $url = Storage::disk('public')->url($path);
+            $url = Storage::disk($disk)->url($path);
 
             return response()->json([
                 'status' => 'success',
