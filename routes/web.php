@@ -75,3 +75,9 @@ Route::get('/get-client-key.php', function () {
         'client_key' => config('services.midtrans.client_key') ?: env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-PLACEHOLDER')
     ]);
 });
+
+Route::get('/debug-plans', function () {
+    return response()->json(
+        \App\Models\SavingsPlan::select('id', 'plan_code', 'package_name', 'target_amount', 'collected_amount', 'status')->get()
+    );
+});
